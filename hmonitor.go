@@ -26,20 +26,25 @@ func main() {
 	// Инициализатор датчика. Initializes the sensor.
 	s := ads.Start()
 	if s != nil {
-		log.Fatalf("Err open sensor: ", s)
+		log.Fatal(s)
 	}
 	log.Println(s) // // Тест данных. For test
 
 	// Читает данные с аналоговых выходов указанных пинов
 	// Returns value from analog out pins of specified pins
-	for {
-		r, err := ads.AnalogRead("0-1")
-		if err != nil {
-			log.Fatalf("Err analog read: ", r)
+	done := make(chan int)
+	go func() {
+		for {
+			r, err := ads.AnalogRead("0-1")
+			if err != nil {
+				log.Fatal("Err analog read: ", err)
+			}if r != nil || err != nil{
+				done <- 1
+			}
+			log.Println(r)
+			time.Sleep(1 * time.Second) // Тайм-аут опроса. Timeout
 		}
-		log.Println(r)
-		time.Sleep(2 * time.Second) // Тайм-аут опроса. Timeout
-	}
+	}()
 
 	// Инициирует и стартует новый процесс робота
 	// Inits the new proccess of robot
@@ -49,4 +54,6 @@ func main() {
 	)
 
 	robot.Start()
+	<- done
+	robot.Stop()
 }
