@@ -37,10 +37,9 @@ func main() {
 		for {
 			r, err := ads.AnalogRead("0-1")
 			if err != nil {
-				log.Fatal("Err analog read: ", err)
-			}if r != nil || err != nil{
 				done <- 1
-			}
+				log.Fatal("Err analog read: ", err)
+			}if r != nil{			
 			log.Println(r)
 			time.Sleep(1 * time.Second) // Тайм-аут опроса. Timeout
 		}

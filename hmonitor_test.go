@@ -5,12 +5,15 @@ import (
 	"strings"
 	"testing"
 
-	"gobot.io/x/gobot/v2/gobottest"
+	"gobot.io/x/gobot/drivers/i2c"
+	"gobot.io/x/gobot/platforms/raspi"
+
+	"gobottest"
 )
 
-func initTestADS1115DriverWithStubbedAdaptor() (*ADS1x15Driver, *i2cTestAdaptor) {
-	a := newI2cTestAdaptor()
-	d := NewADS1115Driver(a)
+func initTestADS1115DriverWithAdaptor() (*i2c.ADS1x15Driver, *raspi.NewAdaptor) {
+	a := raspi.NewAdaptor()
+	d := i2c.NewADS1115Driver(a)
 	if err := d.Start(); err != nil {
 		panic(err)
 	}
@@ -18,8 +21,8 @@ func initTestADS1115DriverWithStubbedAdaptor() (*ADS1x15Driver, *i2cTestAdaptor)
 }
 
 func TestNewADS1115Driver(t *testing.T) {
-	var di interface{} = NewADS1115Driver(newI2cTestAdaptor())
-	d, ok := di.(*ADS1x15Driver)
+	var di interface{} = i2c.NewADS1115Driver(raspi.NewAdaptor())
+	d, ok := di.(*i2c.ADS1x15Driver)
 	if !ok {
 		t.Errorf("NewADS1115Driver() should have returned *ADS1x15Driver")
 	}
@@ -32,12 +35,11 @@ func TestNewADS1115Driver(t *testing.T) {
 }
 
 func TestADS1115AnalogRead(t *testing.T) {
-	d, a := initTestADS1115DriverWithStubbedAdaptor()
-	WithADS1x15WaitSingleCycle()(d)
+	d, a := initTestADS1115DriverWithAdaptor()
 
-	a.i2cReadImpl = func(b []byte) (int, error) {
-		copy(b, []byte{0x7F, 0xFF})
-		return 2, nil
+	a.DigitalRead = func(b string) (int, error) {
+		copy(b, "1")
+		return 1, nil
 	}
 
 	val, err := d.AnalogRead("0")
@@ -77,9 +79,9 @@ func TestADS1115AnalogRead(t *testing.T) {
 }
 
 func TestADS1115AnalogReadError(t *testing.T) {
-	d, a := initTestADS1115DriverWithStubbedAdaptor()
+	d, a := initTestADS1115DriverWithAdaptor()
 
-	a.i2cReadImpl = func(b []byte) (int, error) {
+	a.DigitalRead = func(b string) (int, error) {
 		return 0, errors.New("read error")
 	}
 
@@ -88,9 +90,9 @@ func TestADS1115AnalogReadError(t *testing.T) {
 }
 
 func TestADS1115AnalogReadWriteError(t *testing.T) {
-	d, a := initTestADS1115DriverWithStubbedAdaptor()
+	d, a := initTestADS1115DriverWithAdaptor()
 
-	a.i2cWriteImpl = func([]byte) (int, error) {
+	a.DigitalRead = func(string) (int, error) {
 		return 0, errors.New("write error")
 	}
 
