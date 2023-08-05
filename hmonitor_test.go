@@ -2,22 +2,21 @@ package main
 
 import (
 	"errors"
+	"gobottest"
 	"strings"
 	"testing"
 
 	"gobot.io/x/gobot/drivers/i2c"
 	"gobot.io/x/gobot/platforms/raspi"
-
-	"gobottest"
 )
 
-func initTestADS1115DriverWithAdaptor() (*i2c.ADS1x15Driver, *raspi.NewAdaptor) {
+func initTestADS1115DriverWithAdaptor() *i2c.ADS1x15Driver {
 	a := raspi.NewAdaptor()
 	d := i2c.NewADS1115Driver(a)
 	if err := d.Start(); err != nil {
 		panic(err)
 	}
-	return d, a
+	return d
 }
 
 func TestNewADS1115Driver(t *testing.T) {
@@ -26,21 +25,16 @@ func TestNewADS1115Driver(t *testing.T) {
 	if !ok {
 		t.Errorf("NewADS1115Driver() should have returned *ADS1x15Driver")
 	}
-	gobottest.Refute(t, d.Driver, nil)
+	gobottest.Refute(t, d.Config, nil)
 	gobottest.Assert(t, strings.HasPrefix(d.Name(), "ADS1115"), true)
 	for i := 0; i <= 3; i++ {
-		gobottest.Assert(t, d.channelCfgs[i].gain, 1)
-		gobottest.Assert(t, d.channelCfgs[i].dataRate, 128)
+		gobottest.Assert(t, d.DefaultGain, 1)
+		gobottest.Assert(t, d.DefaultDataRate, 128)
 	}
 }
 
 func TestADS1115AnalogRead(t *testing.T) {
-	d, a := initTestADS1115DriverWithAdaptor()
-
-	a.DigitalRead = func(b string) (int, error) {
-		copy(b, "1")
-		return 1, nil
-	}
+	d := initTestADS1115DriverWithAdaptor()
 
 	val, err := d.AnalogRead("0")
 	gobottest.Assert(t, val, 32767)
@@ -79,22 +73,14 @@ func TestADS1115AnalogRead(t *testing.T) {
 }
 
 func TestADS1115AnalogReadError(t *testing.T) {
-	d, a := initTestADS1115DriverWithAdaptor()
-
-	a.DigitalRead = func(b string) (int, error) {
-		return 0, errors.New("read error")
-	}
+	d := initTestADS1115DriverWithAdaptor()
 
 	_, err := d.AnalogRead("0")
 	gobottest.Assert(t, err, errors.New("read error"))
 }
 
 func TestADS1115AnalogReadWriteError(t *testing.T) {
-	d, a := initTestADS1115DriverWithAdaptor()
-
-	a.DigitalRead = func(string) (int, error) {
-		return 0, errors.New("write error")
-	}
+	d := initTestADS1115DriverWithAdaptor()
 
 	_, err := d.AnalogRead("0")
 	gobottest.Assert(t, err, errors.New("write error"))

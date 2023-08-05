@@ -1,4 +1,6 @@
-### Описание. Description  
+## Raspberry-ads1x15-ad8232  
+
+### Описание. Description    
 Пакет для считывания данных с аналовоговых `ЭМГ` датчиков (`EMG Sensors`).  
 Подключение `AD8232` (`Heart Rate Monitor`) через АЦП `ADS1115` (`Analog to Digital Converter`) к шине `I2C` (`SDA-SCL`) Raspberry Pi. 
 

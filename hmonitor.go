@@ -35,11 +35,11 @@ func main() {
 	done := make(chan int)
 	go func() {
 		for {
-			r, err := ads.AnalogRead("0-1")
+			r, err := ads.AnalogRead("0-3")
 			if err != nil {
 				done <- 1
 				log.Fatal("Err analog read: ", err)
-			}if r != nil{			
+			}
 			log.Println(r)
 			time.Sleep(1 * time.Second) // Тайм-аут опроса. Timeout
 		}
@@ -53,6 +53,6 @@ func main() {
 	)
 
 	robot.Start()
-	<- done
+	<-done
 	robot.Stop()
 }
